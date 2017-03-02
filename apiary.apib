@@ -1,80 +1,183 @@
 FORMAT: 1A
-HOST: http://polls.apiblueprint.org/
+HOST: http://planning.api.takemobi.com/
 
 # The Mobi Planning API
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+This REST API provides access to our planning and scheduling
+services. Current version of this API is running on:
 
-## Questions Collection [/questions]
+* http://planning.api.takemobi.com/
 
-### List All Questions [GET]
+## Allowed HTTP requests
+
+* GET - Retrieves a resource or list of resources
+* POST - Creates or updates a resource
+
+# Group Vehicle Routing Problems
+
+## Create and Solve [/planner-web-interface/updateProblem]
+
+Create a new problem based on the json payload and find the best solution for it.
+
+### POST
+
++ Request (application/json)
+    + Attributes
+        + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created.
+        + mode: DRIVING (enum, required) - the travel mode selected by the user for this trip.
+            + Members
+                + driving
+                + biking
+                + walking
+        + origin (Location, required) - the origin of this trip.
+        + origin (Location, required) - the destination of this trip.
+        + activities (array[Task], required) - the set of tasks to be achieved.
+                
++ Response 200 (application/json)
+
+    + Attributes
+        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + solution (Solution, optional) - the solution object for the problem.
+
+## Next Solution [/planner-web-interface/replan{?email}]
+
+Find the next best solution given the current problem.
+
++ Parameters
+    + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created before.
+
+### GET
 
 + Response 200 (application/json)
 
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
-            }
-        ]
+    + Attributes
+        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + solution (Solution, optional) - the solution object for the problem.
 
-### Create a New Question [POST]
+## Add Discrete Conflict and Replan [/planner-web-interface/addDecisionConflictAndReplan]
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+Insert a new conflict of discrete variable assignments and find the next best solution given the current problem.
 
+### POST
+    
 + Request (application/json)
+    + Attributes
+        + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created before.
+        + assignments (array[Decision], required) - contains an array of discrete variable assignments that should be avoided in future solutions.
 
-        {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
++ Response 200 (application/json)
 
-+ Response 201 (application/json)
+    + Attributes
+        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + solution (Solution, optional) - the solution object for the problem.
 
-    + Headers
+## Add Temporal Conflict and Replan [/planner-web-interface/addTemporalConflictAndReplan{?email,constraintID,isLB,isUB,newLB,newUB}]
 
-            Location: /questions/2
+Insert a new conflict of temporal constraints and find the next best solution given the current problem.
 
-    + Body
++ Parameters
+    + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created before.
+    + constraintID: `34523-64gsd-vzx34-123sa` (string, required) - a unique identifier for the constraint object to be modified.
+    + isLB: `false` (boolean, optional) - sepcifies if the modification is made to the lower bound of the constraint.
+    + isUB: `false` (boolean, optional) - sepcifies if the modification is made to the upper bound of the constraint.
+    + newLB: `10` (number, optional) - sepcifies the new lower bound of the constraint.
+    + newUB: `100` (number, optional) - sepcifies the new upper bound of the constraint.
 
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
-            }
+### GET
+
++ Response 200 (application/json)
+
+    + Attributes
+        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + solution (Solution, optional) - the solution object for the problem.
+        
+## Data Structures
+
+### Solution
++ id: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - unique identifier for the solution object.
++ utility: `10` (number, required) - the utility of the solution object.
++ cost: `10` (number, required) - the cost amount in USD of the solution object.
++ decisions (array[Decision], required) - contains an array of discrete variable assignments.
++ ccRelaxations (array[CCRelaxation], required) - contains an array of chance constraint relaxations.
++ temporalRelaxations (array[TemporalRelaxation], required) - contains an array of temporal relaxations.
++ semanticRelaxations (array[DomainRelaxation], required) - contains an array of domain relaxations.
++ activities (array[Activity], required) - contains an array of activities in the solution.
++ pois (array[POI], required) - contains an array of point-of-interests visited by this solution.
++ departureConstraint: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, optional) - the id for the constraint that encodes the departure time requirement.
++ absoluteDepartureTime: `10` (number, optional) - the departure time specified as Unix time, or milliseconds since midnight, January 1, 1970 UTC.
++ departureTime: `10` (string, optional) - a textual description for the departure time.
++ arrivalConstraint: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, optional) - the id for the constraint that encodes the arrival time requirement.
++ absoluteArrivalTime: `10` (number, optional) - the arrival time specified as Unix time, or milliseconds since midnight, January 1, 1970 UTC.
++ arrivalTime: `10` (string, optional) - a textual description for the arrival time.
+
+### Decision
++ name: `Chinese Restaurant` (string, required) - the name of the decision variable.
++ id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the decision variable.
++ value: `Mary Chung` (string, required) - the domain value selected.
++ description: `a restaurant in Central Square` (string, required) - a textual description for the assignment made.
+
+### CCRelaxation
++ originalValue: `0.01` (number, required) - the original risk bound of the chance constraint.
++ relaxedValue: `0.05` (number, required) - the relaxed risk bound of the chance constraint.
++ description: `Relaxing the risk bound from 1% to 5%` (string, required) - a textual description for the chance-constrained relaxation.
+
+### TemporalRelaxation
++ id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the relaxed constraint.
++ relaxedLB: `true` (boolean, required) - sepcifies if the relaxation modifies the lower bound of the constraint.
++ relaxedUB: `false` (boolean, required) - sepcifies if the relaxation modifies the lower bound of the constraint.
++ originalValue: `10` (number, required) - the original temporal bound of the constraint.
++ relaxedValue: `5` (number, required) - the relaxed temporal bound of the constraint.
++ description: `Shorten the duration from 10 minutes to 5 minutes` (string, required) - a textual description for the temporal relaxation.
+
+### DomainRelaxation
++ description: `Relax the cuisine requirement from Chinese to Korean` (string, required) - a textual description for the domain relaxation.
+
+### Activity
++ index: 3 (number, required) - the sequence index for this activity.
++ name: `Drive to 745 Atlantic Ave` (string, required) - a textual instruction for this activity.
++ guards (array[Decision], required) - the set of guard assignments for this activity.
++ duration: `92.8` (number, required) - indicates the duration of this activity, in minutes.
++ relaxed: `true` (boolean, required) - sepcifies if the duration of the activity has been relaxed.
++ startLoc: `Sidney Pacific, 70 Pacific Street` (string, required) - the from location where the activity begins.
++ endLoc: `Stata Center32 Vassar Street` (string, required) - the location where the activity ends.
++ isGoal: `false` (boolean, required) - indicates if the activity specifies the stay at one of the goals contained in the original problem (instead of a traversal between the goals).
++ goalIndex: `2` (number, optional) - the index number of the goal object this activity represents.
++ startLat: `42.35031` (number, required) - the latitude of the from location.
++ startLon: `-71.0571` (number, required) - the longitude of the from location.
++ endLat: `42.35031` (number, required) - the latitude of the to location.
++ endLon: `-71.0571` (number, required) - the longitude of the to location.
++ polyline: `42.35031,-71.0571,42.35031,-71.0571,42.35031,-71.0571` (string, optional) - contains a single points object that holds an encoded polyline representation of the activity.
+
+### POI
++ name: `Sidney Pacific, 70 Pacific Street` (string, required) - the name of the point-of-interest.
++ lat: `42.35031` (number, required) - the latitude of the POI.
++ lon: `-71.0571` (number, required) - the longitude of the POI.
+
+### Location
++ name: `Mary Chung, 464 Massachusetts Ave` (string, required) - the name of the location.
++ id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the location.
++ index: 3 (number, required) - the sequence index for this location.
++ latitude: `42.35031` (number, required) - the latitude of the location.
++ longitude: `-71.0571` (number, required) - the longitude of the location.
++ departure-time: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - the time of departure, in HH:mm.
++ departure-date: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - the date of departure, in MM/dd/yyyy.
++ arrival-time: `15:00` (string, required) - the time of arrival, in HH:mm.
++ relaxable: `false` (boolean, required) - sepcifies if the departure/arrival time for this location is relaxable.
++ preferred: `false` (boolean, required) - sepcifies if this is a preferred location.
+
+### Task
++ index: 3 (number, required) - the sequence index for this task.
++ type (enum, required) - the type of this task.
+    + Members
+        + Partial - the task is partially specified and candidates need to be retrieved by the planner according to constraints in the description.
+        + Complete - the task is fully specified by the candidates encoded in this object.
++ name: `Chinese Restaurant` (string, required) - the name of the task.
++ description (object, optional) - a JSON object that describes the domain of this task. Each key-value pair corresponds to a phrase in the WHERE clause of a SELECT MySQL query.
+    + type: `Restaurant` (string, optional) - the type of the task location.
+    + cuisine: `Chinese` (string, optional) - the cuisine of food provided at this location (for restaurant task only).
+    + genre: `Action` (string, optional) - genre for the movie (for movie task only).
++ order: 3 (number, required) - the sequential order for this task compared to the others.
++ time: `11:00` (string, required) - the time of start, in HH:mm.
++ duration: `92.8` (number, required) - indicates the required duration of this task, in minutes.
++ relaxable: `false` (boolean, required) - sepcifies if the duration for this task is relaxable.
++ candidates (array[Location], required) - the candidate locations to visit for this task.
