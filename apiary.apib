@@ -15,169 +15,198 @@ services. Current version of this API is running on:
 
 # Group Vehicle Routing Problems
 
-## Create and Solve [/planner-web-interface/updateProblem]
+## Create and Solve [/planner/new-problem]
 
-Create a new problem based on the json payload and find the best solution for it.
+Create a new planning problem based on the JSON payload, and find the best solution to it.
 
 ### POST
 
 + Request (application/json)
     + Attributes
-        + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created.
-        + mode: DRIVING (enum, required) - the travel mode selected by the user for this trip.
-            + Members
-                + driving
-                + biking
-                + walking
-        + origin (Location, required) - the origin of this trip.
-        + origin (Location, required) - the destination of this trip.
-        + activities (array[Task], required) - the set of tasks to be achieved.
+        + user_id: `yupeng@mit.edu` (string, required) - a unique identifier for the user, which is used as an identifier for the planning problem created.
+        + problem (Problem, required) - the JSON object that encodes the planning problem.
                 
 + Response 200 (application/json)
 
     + Attributes
-        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + status (enum, required) - contains metadata on the request. When the status code is other than OK, there may be an additional error_message field within the Directions response object. This field contains more detailed information about the reasons behind the given status code.
+            + Members
+                + OK - indicates the response contains a valid result
+                + ZERO_RESULTS - indicates no feasible plan could be found for the problem.
+                + INVALID_REQUEST - indicates that the provided request was invalid.
+                + REQUEST_DENIED - indicates that the service denied use of the routing service by your application.
+                + UNKNOWN_ERROR - indicates a routing request could not be processed due to a server error.
+        + error_message (string, optional) - This field contains more detailed information about the reasons behind the given status code.
         + solution (Solution, optional) - the solution object for the problem.
 
-## Next Solution [/planner-web-interface/replan{?email}]
+## Next Solution [/planner/next-solution{?user_id}]
 
-Find the next best solution given the current problem.
+Find the next best solution for the current problem.
 
 + Parameters
-    + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created before.
+    + user_id: `yupeng@mit.edu` (string, required) - a unique identifier for the user, which is used as an identifier for the planning problem created.
 
 ### GET
 
 + Response 200 (application/json)
 
     + Attributes
-        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + status (enum, required) - contains metadata on the request. When the status code is other than OK, there may be an additional error_message field within the Directions response object. This field contains more detailed information about the reasons behind the given status code.
+            + Members
+                + OK - indicates the response contains a valid result
+                + ZERO_RESULTS - indicates no feasible plan could be found for the problem.
+                + INVALID_REQUEST - indicates that the provided request was invalid.
+                + REQUEST_DENIED - indicates that the service denied use of the routing service by your application.
+                + UNKNOWN_ERROR - indicates a routing request could not be processed due to a server error.
+        + error_message (string, optional) - This field contains more detailed information about the reasons behind the given status code.
         + solution (Solution, optional) - the solution object for the problem.
 
-## Add Discrete Conflict and Replan [/planner-web-interface/addDecisionConflictAndReplan]
+## Add Discrete Conflict and Replan [/planner/add-decision-conflict]
 
-Insert a new conflict of discrete variable assignments and find the next best solution given the current problem.
+Insert a new conflict of discrete variable assignments and find the next best solution for the current problem.
 
 ### POST
     
 + Request (application/json)
     + Attributes
-        + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created before.
-        + assignments (array[Decision], required) - contains an array of discrete variable assignments that should be avoided in future solutions.
+        + user_id: `yupeng@mit.edu` (string, required) - a unique identifier for the user, which is used as an identifier for the planning problem created.
+        + conflict (Conflict, required) - a JSON object that encodes a set of discrete variable assignments that should be avoided in future solutions.
 
 + Response 200 (application/json)
 
     + Attributes
-        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + status (enum, required) - contains metadata on the request. When the status code is other than OK, there may be an additional error_message field within the Directions response object. This field contains more detailed information about the reasons behind the given status code.
+            + Members
+                + OK - indicates the response contains a valid result
+                + ZERO_RESULTS - indicates no feasible plan could be found for the problem.
+                + INVALID_REQUEST - indicates that the provided request was invalid.
+                + REQUEST_DENIED - indicates that the service denied use of the routing service by your application.
+                + UNKNOWN_ERROR - indicates a routing request could not be processed due to a server error.
+        + error_message (string, optional) - This field contains more detailed information about the reasons behind the given status code.
         + solution (Solution, optional) - the solution object for the problem.
 
-## Add Temporal Conflict and Replan [/planner-web-interface/addTemporalConflictAndReplan{?email,constraintID,isLB,isUB,newLB,newUB}]
+## Add Temporal Conflict and Replan [/planner/add-temporal-conflict{?user_id,episode_id,is_lb,is_ub,new_lb,new_ub}]
 
-Insert a new conflict of temporal constraints and find the next best solution given the current problem.
+Insert a new conflict of temporal constraints and find the next best solution for the current problem.
 
 + Parameters
-    + email: `yupeng@mit.edu` (string, required) - the user's email used as a unique identifier for the problem created before.
-    + constraintID: `34523-64gsd-vzx34-123sa` (string, required) - a unique identifier for the constraint object to be modified.
-    + isLB: `false` (boolean, optional) - sepcifies if the modification is made to the lower bound of the constraint.
-    + isUB: `false` (boolean, optional) - sepcifies if the modification is made to the upper bound of the constraint.
-    + newLB: `10` (number, optional) - sepcifies the new lower bound of the constraint.
-    + newUB: `100` (number, optional) - sepcifies the new upper bound of the constraint.
+    + user_id: `yupeng@mit.edu` (string, required) - a unique identifier for the user, which is used as an identifier for the planning problem created.
+    + episode_id: `34523-64gsd-vzx34-123sa` (string, required) - a unique identifier for the episode object to be modified.
+    + is_lb: `false` (boolean, optional) - specifies if the modification is made to the lower bound of the episode.
+    + is_ub: `false` (boolean, optional) - specifies if the modification is made to the upper bound of the episode.
+    + new_lb: `10` (number, optional) - specifies the new lower bound of the episode.
+    + new_ub: `100` (number, optional) - specifies the new upper bound of the episode.
 
 ### GET
 
 + Response 200 (application/json)
 
     + Attributes
-        + error (string, optional) - if no solution is returned, this field contains detailed information about the reasons behind the error.
+        + status (enum, required) - contains metadata on the request. When the status code is other than OK, there may be an additional error_message field within the Directions response object. This field contains more detailed information about the reasons behind the given status code.
+            + Members
+                + OK - indicates the response contains a valid result
+                + ZERO_RESULTS - indicates no feasible plan could be found for the problem.
+                + INVALID_REQUEST - indicates that the provided request was invalid.
+                + REQUEST_DENIED - indicates that the service denied use of the routing service by your application.
+                + UNKNOWN_ERROR - indicates a routing request could not be processed due to a server error.
+        + error_message (string, optional) - This field contains more detailed information about the reasons behind the given status code.
         + solution (Solution, optional) - the solution object for the problem.
         
 ## Data Structures
 
+### Problem
++ id: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - unique identifier for the problem object.
++ name: `Evening Trip` (string, optional) - a custom name for the planning problem.
++ startEvent (Event, required) - the reference start event of the problem.
++ endEvent (Event, required) - the reference end event of the problem.
++ events (array[Event], required) - an array of all events in this problem.
++ locations (array[Location], optional) - an array of all locations in this problem.
++ decisionVariables (array[DecisionVariable], optional) - contains an array of discrete decision variables.
++ episodes (array[Episode], required) - contains an array of episodes.
++ goals (array[Goal], optional) - contains an array of goals in the problem.
++ agents (array[Agent], optional) - contains an array of agents in the problem.
++ defaultConflicts (array[Conflict], optional) - contains an array of conflicts in the problem that exist from the beginning.
+
 ### Solution
 + id: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - unique identifier for the solution object.
-+ utility: `10` (number, required) - the utility of the solution object.
-+ cost: `10` (number, required) - the cost amount in USD of the solution object.
-+ decisions (array[Decision], required) - contains an array of discrete variable assignments.
-+ ccRelaxations (array[CCRelaxation], required) - contains an array of chance constraint relaxations.
++ g: `10` (number, required) - the utility of the solution object.
++ assignments (array[Assignment], required) - contains an array of discrete variable assignments in this conflict.
 + temporalRelaxations (array[TemporalRelaxation], required) - contains an array of temporal relaxations.
-+ semanticRelaxations (array[DomainRelaxation], required) - contains an array of domain relaxations.
-+ activities (array[Activity], required) - contains an array of activities in the solution.
-+ pois (array[POI], required) - contains an array of point-of-interests visited by this solution.
-+ departureConstraint: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, optional) - the id for the constraint that encodes the departure time requirement.
-+ absoluteDepartureTime: `10` (number, optional) - the departure time specified as Unix time, or milliseconds since midnight, January 1, 1970 UTC.
-+ departureTime: `10` (string, optional) - a textual description for the departure time.
-+ arrivalConstraint: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, optional) - the id for the constraint that encodes the arrival time requirement.
-+ absoluteArrivalTime: `10` (number, optional) - the arrival time specified as Unix time, or milliseconds since midnight, January 1, 1970 UTC.
-+ arrivalTime: `10` (string, optional) - a textual description for the arrival time.
++ domainRelaxations (array[DomainRelaxation], required) - contains an array of domain relaxations.
++ activatedEpisodes (array[Episode], required) - contains an array of episodes enabled by this solution.
 
-### Decision
+### Conflict
++ index: `1` (number, required) - the index number of this conflict (which indicates the sequence of its discovery).
++ continuouslyRelaxable: `false` (boolean, optional) - indicates if the conflict can be resolved through weakening the episodes.
++ discretelyRelaxable: `true` (boolean, optional) - indicates if the conflict can be resolved through alternating variable assignments.
++ assignments (array[Assignment], required) - an array of domain assignments of the decision variable.
+
+### DecisionVariable
 + name: `Chinese Restaurant` (string, required) - the name of the decision variable.
 + id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the decision variable.
-+ value: `Mary Chung` (string, required) - the domain value selected.
-+ description: `a restaurant in Central Square` (string, required) - a textual description for the assignment made.
++ guards (array[Assignment], required) - an array of guard assignments for the decision variable.
++ assignments (array[Assignment], required) - an array of domain assignments of the decision variable.
 
-### CCRelaxation
-+ originalValue: `0.01` (number, required) - the original risk bound of the chance constraint.
-+ relaxedValue: `0.05` (number, required) - the relaxed risk bound of the chance constraint.
-+ description: `Relaxing the risk bound from 1% to 5%` (string, required) - a textual description for the chance-constrained relaxation.
+### Assignment
++ id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the assignment.
++ variable: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the decision variable of this assignment.
++ value: `Mary Chung` (string, required) - the domain value selected.
++ utility: `10` (number, required) - the utility value of this assignment.
 
 ### TemporalRelaxation
-+ id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the relaxed constraint.
-+ relaxedLB: `true` (boolean, required) - sepcifies if the relaxation modifies the lower bound of the constraint.
-+ relaxedUB: `false` (boolean, required) - sepcifies if the relaxation modifies the lower bound of the constraint.
-+ originalValue: `10` (number, required) - the original temporal bound of the constraint.
-+ relaxedValue: `5` (number, required) - the relaxed temporal bound of the constraint.
-+ description: `Shorten the duration from 10 minutes to 5 minutes` (string, required) - a textual description for the temporal relaxation.
++ episode: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - the unique identifier for the relaxed episode.
++ relaxedLB: `true` (boolean, optional) - specifies the value of the relaxed lower bound.
++ relaxedUB: `false` (boolean, optional) - specifies the value of the relaxed upper bound.
++ isLBRelaxed: `true` (boolean, required) - specifies if the relaxation modifies the lower bound of the episode.
++ isUBRelaxed: `false` (boolean, required) - specifies if the relaxation modifies the upper bound of the episode.
++ cost: `5` (number, required) - the utility loss of this relaxation.
 
 ### DomainRelaxation
 + description: `Relax the cuisine requirement from Chinese to Korean` (string, required) - a textual description for the domain relaxation.
 
-### Activity
-+ index: 3 (number, required) - the sequence index for this activity.
-+ name: `Drive to 745 Atlantic Ave` (string, required) - a textual instruction for this activity.
-+ guards (array[Decision], required) - the set of guard assignments for this activity.
-+ duration: `92.8` (number, required) - indicates the duration of this activity, in minutes.
-+ relaxed: `true` (boolean, required) - sepcifies if the duration of the activity has been relaxed.
-+ startLoc: `Sidney Pacific, 70 Pacific Street` (string, required) - the from location where the activity begins.
-+ endLoc: `Stata Center32 Vassar Street` (string, required) - the location where the activity ends.
-+ isGoal: `false` (boolean, required) - indicates if the activity specifies the stay at one of the goals contained in the original problem (instead of a traversal between the goals).
-+ goalIndex: `2` (number, optional) - the index number of the goal object this activity represents.
-+ startLat: `42.35031` (number, required) - the latitude of the from location.
-+ startLon: `-71.0571` (number, required) - the longitude of the from location.
-+ endLat: `42.35031` (number, required) - the latitude of the to location.
-+ endLon: `-71.0571` (number, required) - the longitude of the to location.
-+ polyline: `42.35031,-71.0571,42.35031,-71.0571,42.35031,-71.0571` (string, optional) - contains a single points object that holds an encoded polyline representation of the activity.
-
-### POI
-+ name: `Sidney Pacific, 70 Pacific Street` (string, required) - the name of the point-of-interest.
-+ lat: `42.35031` (number, required) - the latitude of the POI.
-+ lon: `-71.0571` (number, required) - the longitude of the POI.
+### Episode
++ id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the episode.
++ name: `Drive to 745 Atlantic Ave` (string, required) - the name of the episode.
++ fromEvent (Event, required) - the unique identifier for the start event of the episode.
++ toEvent (Event, required) - the unique identifier for the end event of the episode.
++ lowerbound: `92.8` (number, required) - the lower bound on the temporal duration of this episode, in seconds.
++ upperbound: `92.8` (number, required) - the upper bound on the temporal duration of this episode, in seconds.
++ lbRelaxable: `true` (boolean, optional) - specifies if the upper bound of the episode is relaxable.
++ ubRelaxable: `false` (boolean, optional) - specifies if the upper bound of the episode is relaxable.
++ guards (array[Assignment], required) - an array of guard assignments for the episode.
++ lbRelaxationCost: `10` (number, optional) - specifies the linear cost of relaxing the lower bound.
++ ubRelaxationCost: `20` (number, optional) - specifies the linear cost of relaxing the upper bound.
++ startLocation: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, optional) - the unique identifier for the start location object of this episode.
++ endLocation: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, optional) - the unique identifier for the end location object of this episode.
++ type (enum, required) - the type of this episode.
+    + Members
+        + CONSTRAINT - the episode encodes a temporal constraint.
+        + ACTIVITY - the episode encodes an activity.
+        + DUMMY - the episode should be ignored.
++ controllable: `false` (boolean, required) - indicates if the temporal duration of this episode is controllable.
++ cost: `-71` (number, required) - the cost of executing this episode, in USD.
++ path: `qmpaGnq|pLl@z@fA}AdAaAr@e@p@_@`I}CHCl_@}NzNwFHEj@SNG{AwIaQubAwBkL_CuMfHuCLEnDsAvDmAwBkLQiAGa@KiAQy@OoACg@HqEHq@LaDN}CFwA@{@r@{ElAkGdB}LXwBi@UiCcASlAj@T` (string, optional) - an encoded polyline representation of the trajectory of this episode.
 
 ### Location
 + name: `Mary Chung, 464 Massachusetts Ave` (string, required) - the name of the location.
 + id: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - a unique identifier for the location.
-+ index: 3 (number, required) - the sequence index for this location.
-+ latitude: `42.35031` (number, required) - the latitude of the location.
-+ longitude: `-71.0571` (number, required) - the longitude of the location.
-+ departure-time: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - the time of departure, in HH:mm.
-+ departure-date: `df54ee42-35b2-4884-a6a8-e8f935b98bd5` (string, required) - the date of departure, in MM/dd/yyyy.
-+ arrival-time: `15:00` (string, required) - the time of arrival, in HH:mm.
-+ relaxable: `false` (boolean, required) - sepcifies if the departure/arrival time for this location is relaxable.
-+ preferred: `false` (boolean, required) - sepcifies if this is a preferred location.
++ lat: `42.35031` (number, required) - the latitude of the location.
++ lng: `-71.0571` (number, required) - the longitude of the location.
 
-### Task
-+ index: 3 (number, required) - the sequence index for this task.
-+ type (enum, required) - the type of this task.
-    + Members
-        + Partial - the task is partially specified and candidates need to be retrieved by the planner according to constraints in the description.
-        + Complete - the task is fully specified by the candidates encoded in this object.
-+ name: `Chinese Restaurant` (string, required) - the name of the task.
-+ description (object, optional) - a JSON object that describes the domain of this task. Each key-value pair corresponds to a phrase in the WHERE clause of a SELECT MySQL query.
-    + type: `Restaurant` (string, optional) - the type of the task location.
-    + cuisine: `Chinese` (string, optional) - the cuisine of food provided at this location (for restaurant task only).
-    + genre: `Action` (string, optional) - genre for the movie (for movie task only).
-+ order: 3 (number, required) - the sequential order for this task compared to the others.
-+ time: `11:00` (string, required) - the time of start, in HH:mm.
-+ duration: `92.8` (number, required) - indicates the required duration of this task, in minutes.
-+ relaxable: `false` (boolean, required) - sepcifies if the duration for this task is relaxable.
-+ candidates (array[Location], required) - the candidate locations to visit for this task.
+### Event
++ id: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - unique identifier for the event object.
++ name: `Leaving Home` (string, optional) - the name of the event.
+
+### Goal
++ id: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - unique identifier for the goal object.
++ name: `Lunch` (string, optional) - the name of the goal.
++ selectionVariable: `Leaving Home` (string, optional) - the unique identifier for the variable that selects between alternatives for this goal.
++ goalEpisodes (array[Episode], optional) - an array of episode that encodes the grounded alternatives for this goal.
+
+### Agent
++ id: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - unique identifier for the agent.
++ name: `Car` (string, optional) - the name of the agent.
++ minVelocity: `11` (number, required) - the maximum velocity of the agent (in meter per second).
++ maxVelocity: `7` (number, required) - the minimum velocity of the agent (in meter per second).
++ startLocation: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - the unique identifier for the start location object of the agent.
++ endLocation: `a1111c8c-c720-46c3-8534-2fcdd730040d` (string, required) - the unique identifier for the end location object of the agent.
